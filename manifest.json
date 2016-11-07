@@ -5,7 +5,7 @@
   "description": "Chromeアドオンを自作してみるテスト。",
   "content_scripts": [
     {
-      "matches": ["http://*.jp/*"],
+      "matches": ["http://*.yahoo.co.jp/*"],
       "js": ["jquery-3.1.1.min.js","leap-0.6.3.min.js", "fuga.js"],
       "run_at": "document_idle"
     }
