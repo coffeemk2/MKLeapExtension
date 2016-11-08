@@ -1,23 +1,11 @@
 
 
 var circle = document.createElement('div');
-// var element = document.createElement('div');
 var objBody = document.getElementsByTagName("body").item(0);
 
 
 
 function addElement() {
-	// element.innerHTML = "hogehoge";
-	// element.style.backgroundColor = 'rgba(0,0,0,0.0)';
-	// element.style.position = "fixed";
-	// element.style.left = 0;
-	// element.style.top = 0;
-	// element.style.width = "100vw";
-	// element.style.height = "100vh";
-	// element.style.zIndex = 10000;
-
-	// var circle = document.createElement('div');
-	// circle.innerHTML = "hogehoge";
 	circle.style.borderRadius = "20px"
 	circle.style.backgroundColor = 'blue';
 	circle.style.position = "fixed";
@@ -27,10 +15,8 @@ function addElement() {
 	circle.style.height = "40px";
 	circle.style.zIndex = 10000;
 
-	// objBody.appendChild(element);
 	objBody.appendChild(circle);
-	// objBody.insertBefore(element,objBody.firstChild);
-	// body要素にdivエレメントを追加
+
 }
 
 function getATagPositions(){
@@ -79,6 +65,7 @@ function getNearestATagIndex(x,y){
 			nearestIndex = index;
 		}
 	});
+	// if distance > 20 などで最大を決める
 	return nearestIndex;
 }
 
@@ -108,39 +95,9 @@ Leap.loop(controllerOptions, function(frame) {
 
 		if(allowPointer){
 
-			speed = hand.sphereRadius / 30 ;
-
 
 			// velocity
-			position[0] += yaw*speed;
-			position[1] -= (roll-0.2)*speed;
 
-			// limit
-			position[0] = Math.max(Math.min(position[0],window.innerWidth - 25),0);
-			position[1] = Math.max(Math.min(position[1],window.innerHeight - 25),0);
-
-			// gravity
-			aTagPositions.forEach(function(aTagPosition,index){
-				if ( getDistance(position[0],position[1],aTagPosition.left,aTagPosition.top) < 30){
-					// var x = position[0] - aTagPosition.left;
-					// var y = position[1] - aTagPosition.top;
-					// var theta = Math.atan(y/x);
-					// position[0] -= 5*Math.cos(theta);
-					// position[1] -= 5*Math.sin(theta);
-			
-					if (Math.abs(yaw) < 0.6){
-						position[0] += (aTagPosition.left - position[0])/5;
-					}
-					if (Math.abs(roll) < 0.6){
-						position[1] += (aTagPosition.top - position[1])/5;
-					}
-				}
-			});
-
-			circle.style.left = position[0]+"px";
-			circle.style.top = position[1]+"px";
-
-			circle.innerHTML = hand.sphereRadius;
 		}
 
 	}
@@ -151,13 +108,49 @@ Leap.loop(controllerOptions, function(frame) {
 	if (frame.pointables.length > 0) {
 		// var fingerTypeMap = ["Thumb", "Index finger", "Middle finger", "Ring finger", "Pinky finger"];
 		// var boneTypeMap = ["Metacarpal", "Proximal phalanx", "Intermediate phalanx", "Distal phalanx"];
+
+		var diff = [0,0,0];
+		var speed = 5;
 		var currentScroll = window.pageYOffset;
-		if(frame.pointables[3].extended == false && frame.pointables[4].extended == false && frame.pointables[1].extended == true && frame.pointables[2].extended == true ){
-			allowPointer = false
-			window.scrollTo(0, frame.pointables[2].direction[1]*20 + currentScroll );
-		}else{
-			allowPointer = true
+
+		var scrollMode = false;
+		// if(frame.pointables[3].extended == false && frame.pointables[4].extended == false && frame.pointables[1].extended == true && frame.pointables[2].extended == true ){
+		// 	allowPointer = false
+		// 	window.scrollTo(0, frame.pointables[2].direction[1]*20 + currentScroll );
+		// }else{
+		var indexFinger = frame.hands[0].indexFinger;
+		if(indexFinger.touchDistance < 0.1){
+			if(previousFrame && previousFrame.valid){
+				if(previousFrame.pointables){
+					var oldIndexFinger = previousFrame.pointables[1];
+					// diff[0] = frame.pointables[1].stabilizedTipPosition[0] - oldIndexFinger.stabilizedTipPosition[0];
+					// diff[1] = frame.pointables[1].stabilizedTipPosition[1] - oldIndexFinger.stabilizedTipPosition[1];
+					diff[0] = frame.pointables[1].tipPosition[0] - oldIndexFinger.tipPosition[0];
+					diff[1] = frame.pointables[1].tipPosition[1] - oldIndexFinger.tipPosition[1];
+					diff[2] = frame.pointables[1].tipPosition[2] - oldIndexFinger.tipPosition[2];
+
+					if(diff[2] < Math.sqrt(Math.pow(diff[0],2) + Math.pow(diff[1],2))){
+						position[0] += diff[0]*speed;
+						position[1] -= diff[1]*speed;
+
+						// limit
+						position[0] = Math.max(Math.min(position[0],window.innerWidth - 25),0);
+						position[1] = Math.max(Math.min(position[1],window.innerHeight - 25),0);
+						//
+						circle.style.left = position[0]+"px";
+						circle.style.top = position[1]+"px";
+					}
+				}
+
+
+
+
+			}
 		}
+
+
+		// allowPointer = true
+		// }
 
 
 	}
@@ -173,23 +166,23 @@ Leap.loop(controllerOptions, function(frame) {
 					case "circle":
 					break;
 					case "swipe":
-					if (gesture.state == "start"){
-					window.history.back();
-				}
+					// 	if (gesture.state == "start"){
+					// 	window.history.back();
+					// }
 					break;
 					case "screenTap":
 					break;
 					case "keyTap":
 					// gestureString += "position: " + vectorToString(gesture.position) + " mm";
-					circle.style.backgroundColor = 'red'
-					var nearestIndex = getNearestATagIndex(position[0],position[1]);
-					if(nearestIndex > 0){
-						var aTagElements = document.getElementsByTagName("a");
-						// console.log(nearestIndex);
-						var event = document.createEvent( "MouseEvents" ); // イベントオブジェクトを作成
-						event.initEvent("click", false, true); // イベントの内容を設定
-						aTagElements[nearestIndex].dispatchEvent(event); // イベントを発火させる
-					}
+					// circle.style.backgroundColor = 'red'
+					// var nearestIndex = getNearestATagIndex(position[0],position[1]);
+					// if(nearestIndex > 0){
+					// 	var aTagElements = document.getElementsByTagName("a");
+					// 	// console.log(nearestIndex);
+					// 	var event = document.createEvent( "MouseEvents" ); // イベントオブジェクトを作成
+					// 	event.initEvent("click", false, true); // イベントの内容を設定
+					// 	aTagElements[nearestIndex].dispatchEvent(event); // イベントを発火させる
+					// }
 					break;
 					default:
 				}
