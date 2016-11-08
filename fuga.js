@@ -1,36 +1,24 @@
 
 
 var indexCircle = document.createElement('div');
-var middleCircle = document.createElement('div');
+// var middleCircle = document.createElement('div');
 
 var objBody = document.getElementsByTagName("body").item(0);
 
 
 
 function addElement() {
-	indexCircle.style.borderRadius = "20px"
+	indexCircle.style.borderRadius = "10px"
 	indexCircle.style.backgroundColor = 'rgba(255,255,255,0.5)';
-	indexCircle.style.border = "solid 2px rgba(0,0,0,0.5)";
+	indexCircle.style.border = "solid 1px rgba(0,0,0,0.5)";
 	indexCircle.style.position = "fixed";
 	indexCircle.style.left = "100px";
 	indexCircle.style.top = "100px";
-	indexCircle.style.width = "40px";
-	indexCircle.style.height = "40px";
+	indexCircle.style.width = "20px";
+	indexCircle.style.height = "20px";
 	indexCircle.style.zIndex = 10000;
 
-	middleCircle.style.borderRadius = "20px"
-	middleCircle.style.backgroundColor = "rgba(255,255,255,0.5)";
-	middleCircle.style.border = "solid 2px rgba(0,0,0,0.5)";
-	middleCircle.style.position = "fixed";
-	middleCircle.style.left = "100px";
-	middleCircle.style.top = "100px";
-	middleCircle.style.width = "40px";
-	middleCircle.style.height = "40px";
-	middleCircle.style.zIndex = 10000;
-	// middleCircle.style.visibility = "hidden"
-
 	objBody.appendChild(indexCircle);
-	objBody.appendChild(middleCircle);
 
 }
 
@@ -80,15 +68,15 @@ function getNearestATagIndex(x,y){
 			nearestIndex = index;
 		}
 	});
-	// if distance > 20 などで最大を決める
+	// TODO: if distance > 20 などで最大を決める
 	return nearestIndex;
 }
 
 
 var controllerOptions = {enableGestures: true};
 var previousFrame = null;
-var position = [100,100];
-
+var indexPosition = [100,100];
+var scrollMode = false;
 
 
 addElement();
@@ -124,7 +112,7 @@ Leap.loop(controllerOptions, function(frame) {
 		// var fingerTypeMap = ["Thumb", "Index finger", "Middle finger", "Ring finger", "Pinky finger"];
 		// var boneTypeMap = ["Metacarpal", "Proximal phalanx", "Intermediate phalanx", "Distal phalanx"];
 
-		var diff = [0,0,0];
+		var indexDiff = [0,0,0];
 		var speed = 5;
 		var currentScroll = window.pageYOffset;
 
@@ -132,17 +120,22 @@ Leap.loop(controllerOptions, function(frame) {
 		var middleFinger = frame.hands[0].middleFinger;
 
 
-		var scrollMode = false;
+		// Layouts
 		if(Math.abs(indexFinger.touchDistance - middleFinger.touchDistance) < 0.03){
 			scrollMode = true;
+			indexCircle.style.backgroundColor = "rgba(0,0,255,0.3)";
+		}else{
+			scrollMode = false;
+			var d = indexFinger.touchDistance;
+			if(d < 0){
+				indexCircle.style.backgroundColor = "rgba(0,255,0,0.3)";
+			}else{
+				indexCircle.style.backgroundColor = "rgba(255,0,0,0.3)";//`rgba(${Math.floor(255*Math.abs(d))},0,0,0.5)`;
+			}
+
 		}
 
-		var d = indexFinger.touchDistance;
-		if(d < 0){
-			indexCircle.style.backgroundColor = "rgba(0,255,0,0.3)";
-		}else{
-			indexCircle.style.backgroundColor = "rgba(255,0,0,0.3)";//`rgba(${Math.floor(255*Math.abs(d))},0,0,0.5)`;
-		}
+
 
 
 
@@ -151,27 +144,24 @@ Leap.loop(controllerOptions, function(frame) {
 			window.scrollTo(0, frame.pointables[2].direction[1]*20 + currentScroll );
 		}else{
 			if(indexFinger.touchDistance < 0){
-
 				if(previousFrame && previousFrame.valid){
 					if(previousFrame.pointables[1]){
 						var oldIndexFinger = previousFrame.pointables[1];
-						// diff[0] = frame.pointables[1].stabilizedTipPosition[0] - oldIndexFinger.stabilizedTipPosition[0];
-						// diff[1] = frame.pointables[1].stabilizedTipPosition[1] - oldIndexFinger.stabilizedTipPosition[1];
-						diff[0] = frame.pointables[1].tipPosition[0] - oldIndexFinger.tipPosition[0];
-						diff[1] = frame.pointables[1].tipPosition[1] - oldIndexFinger.tipPosition[1];
-						diff[2] = frame.pointables[1].tipPosition[2] - oldIndexFinger.tipPosition[2];
 
-						if(diff[2] < Math.sqrt(Math.pow(diff[0],2) + Math.pow(diff[1],2))){
-							position[0] += diff[0]*speed;
-							position[1] -= diff[1]*speed;
+						indexDiff[0] = frame.pointables[1].tipPosition[0] - oldIndexFinger.tipPosition[0];
+						indexDiff[1] = frame.pointables[1].tipPosition[1] - oldIndexFinger.tipPosition[1];
+						indexDiff[2] = frame.pointables[1].tipPosition[2] - oldIndexFinger.tipPosition[2];
 
+						if(indexDiff[2] < Math.sqrt(Math.pow(indexDiff[0],2) + Math.pow(indexDiff[1],2))){
+							indexPosition[0] += indexDiff[0]*speed;
+							indexPosition[1] -= indexDiff[1]*speed;
 							// limit
-							position[0] = Math.max(Math.min(position[0],window.innerWidth - 25),0);
-							position[1] = Math.max(Math.min(position[1],window.innerHeight - 25),0);
-							//
-							indexCircle.style.left = position[0]+"px";
-							indexCircle.style.top = position[1]+"px";
+							indexPosition[0] = Math.max(Math.min(indexPosition[0],window.innerWidth - 25),0);
+							indexPosition[1] = Math.max(Math.min(indexPosition[1],window.innerHeight - 25),0);
 
+							//
+							indexCircle.style.left = indexPosition[0]+"px";
+							indexCircle.style.top = indexPosition[1]+"px";
 						}
 					}
 				}
