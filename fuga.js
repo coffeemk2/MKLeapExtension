@@ -1,21 +1,36 @@
 
 
-var circle = document.createElement('div');
+var indexCircle = document.createElement('div');
+var middleCircle = document.createElement('div');
+
 var objBody = document.getElementsByTagName("body").item(0);
 
 
 
 function addElement() {
-	circle.style.borderRadius = "20px"
-	circle.style.backgroundColor = 'blue';
-	circle.style.position = "fixed";
-	circle.style.left = "100px";
-	circle.style.top = "100px";
-	circle.style.width = "40px";
-	circle.style.height = "40px";
-	circle.style.zIndex = 10000;
+	indexCircle.style.borderRadius = "20px"
+	indexCircle.style.backgroundColor = 'rgba(255,255,255,0.5)';
+	indexCircle.style.border = "solid 2px rgba(0,0,0,0.5)";
+	indexCircle.style.position = "fixed";
+	indexCircle.style.left = "100px";
+	indexCircle.style.top = "100px";
+	indexCircle.style.width = "40px";
+	indexCircle.style.height = "40px";
+	indexCircle.style.zIndex = 10000;
 
-	objBody.appendChild(circle);
+	middleCircle.style.borderRadius = "20px"
+	middleCircle.style.backgroundColor = "rgba(255,255,255,0.5)";
+	middleCircle.style.border = "solid 2px rgba(0,0,0,0.5)";
+	middleCircle.style.position = "fixed";
+	middleCircle.style.left = "100px";
+	middleCircle.style.top = "100px";
+	middleCircle.style.width = "40px";
+	middleCircle.style.height = "40px";
+	middleCircle.style.zIndex = 10000;
+	// middleCircle.style.visibility = "hidden"
+
+	objBody.appendChild(indexCircle);
+	objBody.appendChild(middleCircle);
 
 }
 
@@ -113,44 +128,55 @@ Leap.loop(controllerOptions, function(frame) {
 		var speed = 5;
 		var currentScroll = window.pageYOffset;
 
-		var scrollMode = false;
-		// if(frame.pointables[3].extended == false && frame.pointables[4].extended == false && frame.pointables[1].extended == true && frame.pointables[2].extended == true ){
-		// 	allowPointer = false
-		// 	window.scrollTo(0, frame.pointables[2].direction[1]*20 + currentScroll );
-		// }else{
 		var indexFinger = frame.hands[0].indexFinger;
-		if(indexFinger.touchDistance < 0.1){
-			if(previousFrame && previousFrame.valid){
-				if(previousFrame.pointables){
-					var oldIndexFinger = previousFrame.pointables[1];
-					// diff[0] = frame.pointables[1].stabilizedTipPosition[0] - oldIndexFinger.stabilizedTipPosition[0];
-					// diff[1] = frame.pointables[1].stabilizedTipPosition[1] - oldIndexFinger.stabilizedTipPosition[1];
-					diff[0] = frame.pointables[1].tipPosition[0] - oldIndexFinger.tipPosition[0];
-					diff[1] = frame.pointables[1].tipPosition[1] - oldIndexFinger.tipPosition[1];
-					diff[2] = frame.pointables[1].tipPosition[2] - oldIndexFinger.tipPosition[2];
-
-					if(diff[2] < Math.sqrt(Math.pow(diff[0],2) + Math.pow(diff[1],2))){
-						position[0] += diff[0]*speed;
-						position[1] -= diff[1]*speed;
-
-						// limit
-						position[0] = Math.max(Math.min(position[0],window.innerWidth - 25),0);
-						position[1] = Math.max(Math.min(position[1],window.innerHeight - 25),0);
-						//
-						circle.style.left = position[0]+"px";
-						circle.style.top = position[1]+"px";
-					}
-				}
+		var middleFinger = frame.hands[0].middleFinger;
 
 
+		var scrollMode = false;
+		if(Math.abs(indexFinger.touchDistance - middleFinger.touchDistance) < 0.03){
+			scrollMode = true;
+		}
 
-
-			}
+		var d = indexFinger.touchDistance;
+		if(d < 0){
+			indexCircle.style.backgroundColor = "rgba(0,255,0,0.3)";
+		}else{
+			indexCircle.style.backgroundColor = "rgba(255,0,0,0.3)";//`rgba(${Math.floor(255*Math.abs(d))},0,0,0.5)`;
 		}
 
 
-		// allowPointer = true
-		// }
+
+
+		if(scrollMode){
+			window.scrollTo(0, frame.pointables[2].direction[1]*20 + currentScroll );
+		}else{
+			if(indexFinger.touchDistance < 0){
+
+				if(previousFrame && previousFrame.valid){
+					if(previousFrame.pointables[1]){
+						var oldIndexFinger = previousFrame.pointables[1];
+						// diff[0] = frame.pointables[1].stabilizedTipPosition[0] - oldIndexFinger.stabilizedTipPosition[0];
+						// diff[1] = frame.pointables[1].stabilizedTipPosition[1] - oldIndexFinger.stabilizedTipPosition[1];
+						diff[0] = frame.pointables[1].tipPosition[0] - oldIndexFinger.tipPosition[0];
+						diff[1] = frame.pointables[1].tipPosition[1] - oldIndexFinger.tipPosition[1];
+						diff[2] = frame.pointables[1].tipPosition[2] - oldIndexFinger.tipPosition[2];
+
+						if(diff[2] < Math.sqrt(Math.pow(diff[0],2) + Math.pow(diff[1],2))){
+							position[0] += diff[0]*speed;
+							position[1] -= diff[1]*speed;
+
+							// limit
+							position[0] = Math.max(Math.min(position[0],window.innerWidth - 25),0);
+							position[1] = Math.max(Math.min(position[1],window.innerHeight - 25),0);
+							//
+							indexCircle.style.left = position[0]+"px";
+							indexCircle.style.top = position[1]+"px";
+
+						}
+					}
+				}
+			}
+		}
 
 
 	}
