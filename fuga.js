@@ -76,18 +76,22 @@ function getNearestATagIndex(x,y){
 var controllerOptions = {enableGestures: true};
 var previousFrame = null;
 var indexPosition = [100,100];
-var scrollMode = false;
 
 
 addElement();
-var aTagPositions = getATagPositions();
+// var aTagPositions = getATagPositions();
 var allowPointer = true
 
+
+
+var circleTypeMap = ["no_pointables","move","stop","scroll"];
+var circleType = 0;
 
 Leap.loop(controllerOptions, function(frame) {
 
 	// circle.innerHTML = frame.timestamp;
 	var hand = frame.hands[0];
+
 	// Hand motion factors
 	if (hand && previousFrame && previousFrame.valid) {
 		var rotationAxis = hand.rotationAxis(previousFrame, 2);
@@ -123,15 +127,17 @@ Leap.loop(controllerOptions, function(frame) {
 		var pointables = frame.pointables;
 
 		// Layouts
+		indexCircle.style.visibility = "visible";
 		if(pointables[1].extended == true && pointables[2].extended == true && pointables[3].extended == false && pointables[4].extended == false){
-			scrollMode = true;
+			circleType = 3;
 			indexCircle.style.backgroundColor = "rgba(0,0,255,0.3)";
 		}else{
-			scrollMode = false;
 			var d = indexFinger.touchDistance;
 			if(d < 0){
+				circleType = 1;
 				indexCircle.style.backgroundColor = "rgba(0,255,0,0.3)";
 			}else{
+				circleType = 2;
 				indexCircle.style.backgroundColor = "rgba(255,0,0,0.3)";//`rgba(${Math.floor(255*Math.abs(d))},0,0,0.5)`;
 			}
 		}
@@ -139,7 +145,8 @@ Leap.loop(controllerOptions, function(frame) {
 
 
 
-		if(scrollMode){
+		// Controls
+		if(circleType == 3){
 			window.scrollTo(0, frame.pointables[2].direction[1]*20 + currentScroll );
 		}else{
 			if(indexFinger.touchDistance < 0){
@@ -167,7 +174,9 @@ Leap.loop(controllerOptions, function(frame) {
 			}
 		}
 
-
+	}else{
+		circleType = 0;
+		indexCircle.style.visibility = "hidden";
 	}
 
 	if(allowPointer){
@@ -188,6 +197,15 @@ Leap.loop(controllerOptions, function(frame) {
 					case "screenTap":
 					break;
 					case "keyTap":
+					if (circleType == 2){
+						console.log("keyTapped");
+						indexCircle.style.visibility = "hidden";
+						var focusElement = document.elementFromPoint(indexPosition[0]+10,indexPosition[1]+10);
+						var event = document.createEvent( "MouseEvents" ); // イベントオブジェクトを作成
+						event.initEvent("click", false, true); // イベントの内容を設定
+						focusElement.dispatchEvent(event); // イベントを発火させる
+						indexCircle.style.visibility = "visible";
+					}
 					// gestureString += "position: " + vectorToString(gesture.position) + " mm";
 					// circle.style.backgroundColor = 'red'
 					// var nearestIndex = getNearestATagIndex(position[0],position[1]);
