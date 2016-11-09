@@ -68,7 +68,7 @@ function getNearestATagIndex(x,y){
 			nearestIndex = index;
 		}
 	});
-	// TODO: if distance > 20 などで最大を決める
+	// if distance > 20 などで最大を決める
 	return nearestIndex;
 }
 
@@ -119,9 +119,11 @@ Leap.loop(controllerOptions, function(frame) {
 		var indexFinger = frame.hands[0].indexFinger;
 		var middleFinger = frame.hands[0].middleFinger;
 
+		// Math.abs(indexFinger.touchDistance - middleFinger.touchDistance) < 0.05
+		var pointables = frame.pointables;
 
 		// Layouts
-		if(Math.abs(indexFinger.touchDistance - middleFinger.touchDistance) < 0.03){
+		if(pointables[1].extended == true && pointables[2].extended == true && pointables[3].extended == false && pointables[4].extended == false){
 			scrollMode = true;
 			indexCircle.style.backgroundColor = "rgba(0,0,255,0.3)";
 		}else{
@@ -132,10 +134,7 @@ Leap.loop(controllerOptions, function(frame) {
 			}else{
 				indexCircle.style.backgroundColor = "rgba(255,0,0,0.3)";//`rgba(${Math.floor(255*Math.abs(d))},0,0,0.5)`;
 			}
-
 		}
-
-
 
 
 
