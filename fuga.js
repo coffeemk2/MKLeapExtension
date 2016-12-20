@@ -22,6 +22,30 @@ function addElement() {
 
 }
 
+var menu = document.createElement('div');
+function addMenu(){
+	menu.style.backgroundColor = 'rgba(255,255,255,0.8)';
+	menu.style.border = "solid 1px rgba(0,0,0,0.5)";
+	menu.style.width = "50px";
+	menu.style.height = "100px";
+	menu.style.position = "fixed";
+	menu.style.visibility = "hidden";
+
+	var offset = $(indexCircle).offset();
+	menu.style.left = offset.left - 100 + "px";
+	menu.style.top = offset.top - 40 + "px";
+
+	indexCircle.appendChild(menu);
+
+}
+function visibleMenu(){
+	menu.style.visibility = "visible";
+
+	var offset = $(indexCircle).offset();
+	menu.style.left = offset.left - 100 + "px";
+	menu.style.top = offset.top - 40 + "px";
+}
+
 function getATagPositions(){
 	var aTagElements = document.getElementsByTagName("a");
 
@@ -79,13 +103,18 @@ var indexPosition = [100,100];
 
 
 addElement();
+// addMenu();
 // var aTagPositions = getATagPositions();
-var allowPointer = true
 
 
 
-var circleTypeMap = ["no_pointables","move","stop","scroll"];
+var circleTypeMap = ["invalid","move","stop","scroll","menu"];
 var circleType = 0;
+var isLoading = false;
+
+window.onload = function(){
+	isLoading = false;
+}
 
 Leap.loop(controllerOptions, function(frame) {
 
@@ -100,12 +129,7 @@ Leap.loop(controllerOptions, function(frame) {
 		var yaw = rotationAxis[2];
 		var speed = 0;
 
-		if(allowPointer){
 
-
-			// velocity
-
-		}
 
 	}
 
@@ -117,7 +141,6 @@ Leap.loop(controllerOptions, function(frame) {
 		// var boneTypeMap = ["Metacarpal", "Proximal phalanx", "Intermediate phalanx", "Distal phalanx"];
 
 		var indexDiff = [0,0,0];
-		var speed = 5;
 		var currentScroll = window.pageYOffset;
 
 		var indexFinger = frame.hands[0].indexFinger;
@@ -130,15 +153,24 @@ Leap.loop(controllerOptions, function(frame) {
 		indexCircle.style.visibility = "visible";
 		if(pointables[1].extended == true && pointables[2].extended == true && pointables[3].extended == false && pointables[4].extended == false){
 			circleType = 3;
-			indexCircle.style.backgroundColor = "rgba(0,0,255,0.3)";
+			indexCircle.style.backgroundColor = "rgba(0,0,255,0.5)";
+			// menu.style.visibility = "hidden"
+
+		}else if(pointables[1].extended == true && pointables[2].extended == true && pointables[3].extended == true && pointables[4].extended == true){
+			circleType = 4;
+			indexCircle.style.backgroundColor = "rgba(255,255,255,0.5)";
+			// if(menu.style.visibility != "visible"){
+			// 	visibleMenu();
+			// }
 		}else{
+			// menu.style.visibility = "hidden"
 			var d = indexFinger.touchDistance;
 			if(d < 0){
 				circleType = 1;
-				indexCircle.style.backgroundColor = "rgba(0,255,0,0.3)";
+				indexCircle.style.backgroundColor = "rgba(0,255,0,0.5)";
 			}else{
 				circleType = 2;
-				indexCircle.style.backgroundColor = "rgba(255,0,0,0.3)";//`rgba(${Math.floor(255*Math.abs(d))},0,0,0.5)`;
+				indexCircle.style.backgroundColor = "rgba(255,0,0,0.5)";//`rgba(${Math.floor(255*Math.abs(d))},0,0,0.5)`;
 			}
 		}
 
@@ -147,20 +179,26 @@ Leap.loop(controllerOptions, function(frame) {
 
 		// Controls
 		if(circleType == 3){
-			window.scrollTo(0, frame.pointables[2].direction[1]*20 + currentScroll );
+			window.scrollTo(0, -frame.pointables[1].direction[1]*20 + currentScroll );
 		}else{
 			if(indexFinger.touchDistance < 0){
 				if(previousFrame && previousFrame.valid){
 					if(previousFrame.pointables[1]){
-						var oldIndexFinger = previousFrame.pointables[1];
 
+						var oldIndexFinger = previousFrame.pointables[1];
 						indexDiff[0] = frame.pointables[1].tipPosition[0] - oldIndexFinger.tipPosition[0];
 						indexDiff[1] = frame.pointables[1].tipPosition[1] - oldIndexFinger.tipPosition[1];
 						indexDiff[2] = frame.pointables[1].tipPosition[2] - oldIndexFinger.tipPosition[2];
 
-						if(indexDiff[2] < Math.sqrt(Math.pow(indexDiff[0],2) + Math.pow(indexDiff[1],2))){
-							indexPosition[0] += indexDiff[0]*speed;
-							indexPosition[1] -= indexDiff[1]*speed;
+						switch (circleType){
+							case 1:
+							case 4:
+
+							var d = Math.sqrt(Math.pow(indexDiff[0],2) + Math.pow(indexDiff[1],2));
+							// if(indexDiff[2] < d){
+							d = 0.7*d + 1;
+							indexPosition[0] += indexDiff[0]*d;
+							indexPosition[1] -= indexDiff[1]*d;
 							// limit
 							indexPosition[0] = Math.max(Math.min(indexPosition[0],window.innerWidth - 25),0);
 							indexPosition[1] = Math.max(Math.min(indexPosition[1],window.innerHeight - 25),0);
@@ -168,6 +206,18 @@ Leap.loop(controllerOptions, function(frame) {
 							//
 							indexCircle.style.left = indexPosition[0]+"px";
 							indexCircle.style.top = indexPosition[1]+"px";
+
+							// }
+							break;
+
+							// Menu
+							// case 4:
+							// var previousHand = previousFrame.hands[0];
+							// var hand =
+							// break;
+
+							default:
+
 						}
 					}
 				}
@@ -179,50 +229,66 @@ Leap.loop(controllerOptions, function(frame) {
 		indexCircle.style.visibility = "hidden";
 	}
 
-	if(allowPointer){
-		// Gesture Control
-		// var gestureOutput = document.getElementById("gestureData");
-		if (frame.gestures.length > 0) {
-			for (var i = 0; i < frame.gestures.length; i++) {
-				var gesture = frame.gestures[i];
+	// Gesture Control
+	// var gestureOutput = document.getElementById("gestureData");
+	var gestureString = "";
+	if (frame.gestures.length > 0) {
 
-				switch (gesture.type) {
-					case "circle":
-					break;
-					case "swipe":
-					// 	if (gesture.state == "start"){
-					// 	window.history.back();
-					// }
-					break;
-					case "screenTap":
-					break;
-					case "keyTap":
-					if (circleType == 2){
-						console.log("keyTapped");
-						indexCircle.style.visibility = "hidden";
-						var focusElement = document.elementFromPoint(indexPosition[0]+10,indexPosition[1]+10);
-						var event = document.createEvent( "MouseEvents" ); // イベントオブジェクトを作成
-						event.initEvent("click", false, true); // イベントの内容を設定
-						focusElement.dispatchEvent(event); // イベントを発火させる
-						indexCircle.style.visibility = "visible";
+
+		var swipeAction = null;
+
+		for (var i = 0; i < frame.gestures.length; i++) {
+			var gesture = frame.gestures[i];
+			gestureString += "Gesture ID: " + gesture.id + ", "
+			+ "type: " + gesture.type + ", "
+			+ "state: " + gesture.state + ", "
+			+ "hand IDs: " + gesture.handIds.join(", ") + ", "
+			+ "pointable IDs: " + gesture.pointableIds.join(", ") + ", "
+			+ "duration: " + gesture.duration + " &micro;s, ";
+
+
+			switch (gesture.type) {
+				case "circle":
+				break;
+				case "swipe":
+					if(!isLoading){
+						console.log("swipe");
+						window.history.go(-1);
+						isLoading = true;
 					}
-					// gestureString += "position: " + vectorToString(gesture.position) + " mm";
-					// circle.style.backgroundColor = 'red'
-					// var nearestIndex = getNearestATagIndex(position[0],position[1]);
-					// if(nearestIndex > 0){
-					// 	var aTagElements = document.getElementsByTagName("a");
-					// 	// console.log(nearestIndex);
-					// 	var event = document.createEvent( "MouseEvents" ); // イベントオブジェクトを作成
-					// 	event.initEvent("click", false, true); // イベントの内容を設定
-					// 	aTagElements[nearestIndex].dispatchEvent(event); // イベントを発火させる
-					// }
-					break;
-					default:
+
+
+
+				break;
+				case "screenTap":
+				break;
+				case "keyTap":
+				if (circleType == 2){
+					console.log("keyTapped");
+					indexCircle.style.visibility = "hidden";
+					var focusElement = document.elementFromPoint(indexPosition[0]+10,indexPosition[1]+10);
+					var event = document.createEvent( "MouseEvents" ); // イベントオブジェクトを作成
+					event.initEvent("click", false, true); // イベントの内容を設定
+					focusElement.dispatchEvent(event); // イベントを発火させる
+					indexCircle.style.visibility = "visible";
 				}
+				break;
+				default:
 			}
+			// console.log(gestureString);
+
 		}
 	}
 
 	previousFrame = frame;
 
 })
+
+function vectorToString(vector, digits) {
+	if (typeof digits === "undefined") {
+		digits = 1;
+	}
+	return "(" + vector[0].toFixed(digits) + ", "
+	+ vector[1].toFixed(digits) + ", "
+	+ vector[2].toFixed(digits) + ")";
+}
