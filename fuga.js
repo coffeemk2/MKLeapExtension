@@ -8,43 +8,20 @@ var objBody = document.getElementsByTagName("body").item(0);
 
 
 function addElement() {
-	indexCircle.style.borderRadius = "10px"
+	indexCircle.style.borderRadius = "7px"
 	indexCircle.style.backgroundColor = 'rgba(255,255,255,0.5)';
 	indexCircle.style.border = "solid 1px rgba(0,0,0,0.5)";
 	indexCircle.style.position = "fixed";
 	indexCircle.style.left = "100px";
 	indexCircle.style.top = "100px";
-	indexCircle.style.width = "20px";
-	indexCircle.style.height = "20px";
+	indexCircle.style.width = "14px";
+	indexCircle.style.height = "14px";
 	indexCircle.style.zIndex = 10000;
 
 	objBody.appendChild(indexCircle);
 
 }
 
-var menu = document.createElement('div');
-function addMenu(){
-	menu.style.backgroundColor = 'rgba(255,255,255,0.8)';
-	menu.style.border = "solid 1px rgba(0,0,0,0.5)";
-	menu.style.width = "50px";
-	menu.style.height = "100px";
-	menu.style.position = "fixed";
-	menu.style.visibility = "hidden";
-
-	var offset = $(indexCircle).offset();
-	menu.style.left = offset.left - 100 + "px";
-	menu.style.top = offset.top - 40 + "px";
-
-	indexCircle.appendChild(menu);
-
-}
-function visibleMenu(){
-	menu.style.visibility = "visible";
-
-	var offset = $(indexCircle).offset();
-	menu.style.left = offset.left - 100 + "px";
-	menu.style.top = offset.top - 40 + "px";
-}
 
 function getATagPositions(){
 	var aTagElements = document.getElementsByTagName("a");
@@ -103,8 +80,6 @@ var indexPosition = [100,100];
 
 
 addElement();
-// addMenu();
-// var aTagPositions = getATagPositions();
 
 
 
@@ -153,24 +128,19 @@ Leap.loop(controllerOptions, function(frame) {
 		indexCircle.style.visibility = "visible";
 		if(pointables[1].extended == true && pointables[2].extended == true && pointables[3].extended == false && pointables[4].extended == false){
 			circleType = 3;
-			indexCircle.style.backgroundColor = "rgba(0,0,255,1)";
-			// menu.style.visibility = "hidden"
-
+			indexCircle.style.backgroundColor = "rgba(0,0,255,0.5)";
 		}else if(pointables[1].extended == true && pointables[2].extended == true && pointables[3].extended == true && pointables[4].extended == true){
 			circleType = 4;
-			indexCircle.style.backgroundColor = "rgba(255,255,255,1)";
-			// if(menu.style.visibility != "visible"){
-			// 	visibleMenu();
-			// }
+			indexCircle.style.backgroundColor = "rgba(255,255,255,0.5)";
+
 		}else{
-			// menu.style.visibility = "hidden"
 			var d = indexFinger.touchDistance;
 			if(d < 0){
 				circleType = 1;
-				indexCircle.style.backgroundColor = "rgba(0,255,0,1)";
+				indexCircle.style.backgroundColor = "rgba(0,255,0,0.5)";
 			}else{
 				circleType = 2;
-				indexCircle.style.backgroundColor = "rgba(255,0,0,1)";//`rgba(${Math.floor(255*Math.abs(d))},0,0,0.5)`;
+				indexCircle.style.backgroundColor = "rgba(255,0,0,0.5)";//`rgba(${Math.floor(255*Math.abs(d))},0,0,0.5)`;
 			}
 		}
 
@@ -181,7 +151,6 @@ Leap.loop(controllerOptions, function(frame) {
 		if(circleType == 3){
 			window.scrollTo(0, -frame.pointables[1].direction[1]*20 + currentScroll );
 		}else{
-			if(indexFinger.touchDistance < 0){
 				if(previousFrame && previousFrame.valid){
 					if(previousFrame.pointables[1]){
 
@@ -190,6 +159,7 @@ Leap.loop(controllerOptions, function(frame) {
 						indexDiff[1] = frame.pointables[1].tipPosition[1] - oldIndexFinger.tipPosition[1];
 						indexDiff[2] = frame.pointables[1].tipPosition[2] - oldIndexFinger.tipPosition[2];
 
+						// console.log(circleType);
 						switch (circleType){
 							case 1:
 							case 4:
@@ -210,6 +180,7 @@ Leap.loop(controllerOptions, function(frame) {
 							// }
 							break;
 							case 2:
+
 							var pointable = frame.pointables[1];
 							var metacarpalBone = pointable.bones[0];
 							var distalPhalanxBone = pointable.bones[3];
@@ -225,7 +196,7 @@ Leap.loop(controllerOptions, function(frame) {
 							var pmd = pmDirection[1] - pdDirection[1];
 							if(pmd-md < -0.1){
 								indexCircle.style.visibility = "hidden";
-								var focusElement = document.elementFromPoint(indexPosition[0]+10,indexPosition[1]+10);
+								var focusElement = document.elementFromPoint(indexPosition[0]+7,indexPosition[1]+7);
 								var event = document.createEvent( "MouseEvents" ); // イベントオブジェクトを作成
 								event.initEvent("click", false, true); // イベントの内容を設定
 								focusElement.dispatchEvent(event); // イベントを発火させる
@@ -234,19 +205,13 @@ Leap.loop(controllerOptions, function(frame) {
 
 							break;
 
-							// Menu
-							// case 4:
-							// var previousHand = previousFrame.hands[0];
-							// var hand =
-							// break;
-
 							default:
 
 						}
 					}
 				}
 			}
-		}
+
 
 	}else{
 		circleType = 0;
@@ -288,15 +253,15 @@ Leap.loop(controllerOptions, function(frame) {
 				break;
 				case "keyTap":
 				/* click  */
-				// if (circleType == 2){
-				// 	console.log("keyTapped");
-				// 	indexCircle.style.visibility = "hidden";
-				// 	var focusElement = document.elementFromPoint(indexPosition[0]+10,indexPosition[1]+10);
-				// 	var event = document.createEvent( "MouseEvents" ); // イベントオブジェクトを作成
-				// 	event.initEvent("click", false, true); // イベントの内容を設定
-				// 	focusElement.dispatchEvent(event); // イベントを発火させる
-				// 	indexCircle.style.visibility = "visible";
-				// }
+				if (circleType == 2){
+				 	console.log("keyTapped");
+				 	indexCircle.style.visibility = "hidden";
+				 	var focusElement = document.elementFromPoint(indexPosition[0]+7,indexPosition[1]+7);
+				 	var event = document.createEvent( "MouseEvents" ); // イベントオブジェクトを作成
+				 	event.initEvent("click", false, true); // イベントの内容を設定
+				 	focusElement.dispatchEvent(event); // イベントを発火させる
+				 	indexCircle.style.visibility = "visible";
+				}
 				break;
 				default:
 			}
